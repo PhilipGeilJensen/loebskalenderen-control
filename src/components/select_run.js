@@ -4,27 +4,11 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 
-export default function SelectAutoWidth() {
-  const [age, setAge] = React.useState(10);
-
+export default function SelectAutoWidth(props) {
   const handleChange = (event) => {
-    setAge(event.target.value);
+    props.selectEvent(props.events.indexOf(event.target.value))
+
   };
-
-  const items = [
-      {
-          name: "Sportigan løbet 2021",
-          id: 1
-      },
-      {
-          name: "Spanien 2021",
-          id: 2
-      }
-  ]
-
-  React.useEffect(() => {
-    setAge(items[0].id)
-  }, [])
 
   return (
     <div>
@@ -33,13 +17,16 @@ export default function SelectAutoWidth() {
         <Select
           labelId="demo-simple-select-autowidth-label"
           id="demo-simple-select-autowidth"
-          value={age}
+          value={props.events[props.selectedEvent]}
           onChange={handleChange}
           autoWidth
           label="Løb"
         >
-          <MenuItem value={10}>Sportigan løbet</MenuItem>
-          <MenuItem value={21}>Spanien løb 1</MenuItem>
+          {
+            props.events.map(item => (
+              <MenuItem key={item["event_id"]} value={item}>{item["name"]}</MenuItem>
+            ))
+          }
         </Select>
       </FormControl>
     </div>

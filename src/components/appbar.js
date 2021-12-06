@@ -14,12 +14,15 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import MoreIcon from '@mui/icons-material/MoreVert';
 import AppBar from '@mui/material/AppBar';
 import SelectAutoWidth from './select_run';
+import { auth } from '../firebase';
+import { useHistory } from 'react-router';
 const drawerWidth = 240;
 
 export default function CustomAppBar(props) {
     const [anchorEl, setAnchorEl] = React.useState(null);
     const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
     const { openDrawer, open } = props;
+    const history = useHistory();
 
     const isMenuOpen = Boolean(anchorEl);
     const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
@@ -41,6 +44,12 @@ export default function CustomAppBar(props) {
         setMobileMoreAnchorEl(event.currentTarget);
     };
 
+    const handleSignout = () => {
+        auth.signOut();
+        window.localStorage.removeItem("token");
+        history.replace("/auth")
+    }
+
     const menuId = 'primary-search-account-menu';
     const renderMenu = (
         <Menu
@@ -60,6 +69,7 @@ export default function CustomAppBar(props) {
         >
             <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
             <MenuItem onClick={handleMenuClose}>My account</MenuItem>
+            <MenuItem onClick={handleSignout}>Sign out</MenuItem>
         </Menu>
     );
 
@@ -82,7 +92,7 @@ export default function CustomAppBar(props) {
         >
             <MenuItem>
                 <IconButton size="large" aria-label="show 4 new mails" color="inherit">
-                    <Badge badgeContent={4} color="error">
+                    <Badge badgeContent={0} color="error">
                         <MailIcon />
                     </Badge>
                 </IconButton>
@@ -94,7 +104,7 @@ export default function CustomAppBar(props) {
                     aria-label="show 17 new notifications"
                     color="inherit"
                 >
-                    <Badge badgeContent={17} color="error">
+                    <Badge badgeContent={0} color="error">
                         <NotificationsIcon />
                     </Badge>
                 </IconButton>
@@ -138,12 +148,15 @@ export default function CustomAppBar(props) {
                         Løbskalenderen
                     </Typography>
                     <Box sx={{ flexGrow: 1 }} />
-                    <Box>
-                        <SelectAutoWidth></SelectAutoWidth>
-                    </Box>
+                    {
+                        props.selectedEvent !== null && props.selectedEvent !== undefined ?
+                            <Box>
+                                <SelectAutoWidth selectEvent={props.selectEvent} selectedEvent={props.selectedEvent} events={props.events}></SelectAutoWidth>
+                            </Box> : <div></div>
+                    }
                     <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
                         <IconButton size="large" aria-label="show 4 new mails" color="inherit">
-                            <Badge badgeContent={4} color="error">
+                            <Badge badgeContent={0} color="error">
                                 <MailIcon />
                             </Badge>
                         </IconButton>
@@ -152,7 +165,7 @@ export default function CustomAppBar(props) {
                             aria-label="show 17 new notifications"
                             color="inherit"
                         >
-                            <Badge badgeContent={17} color="error">
+                            <Badge badgeContent={0} color="error">
                                 <NotificationsIcon />
                             </Badge>
                         </IconButton>

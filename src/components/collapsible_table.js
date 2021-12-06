@@ -24,29 +24,13 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Switch from '@mui/material/Switch';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FilterListIcon from '@mui/icons-material/FilterList';
-
-function createData(name, calories, fat, carbs, protein, price) {
-    return {
-        name,
-        calories,
-        fat,
-        carbs,
-        protein,
-        price,
-        history: [
-            {
-                date: '2020-01-05',
-                customerId: '11091700',
-                amount: 3,
-            },
-            {
-                date: '2020-01-02',
-                customerId: 'Anonymous',
-                amount: 1,
-            },
-        ],
-    };
-}
+import TextField from '@mui/material/TextField';
+import DateAdapter from '@mui/lab/AdapterMoment';
+import LocalizationProvider from '@mui/lab/LocalizationProvider';
+import TimePicker from '@mui/lab/TimePicker';
+import FormGroup from '@mui/material/FormGroup';
+import Button from '@mui/material/Button';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 
 function descendingComparator(a, b, orderBy) {
@@ -73,13 +57,13 @@ const headCells = [
         label: 'Navn',
     },
     {
-        id: 'distance',
+        id: 'discipline',
         numeric: true,
         disablePadding: false,
         label: 'Distance',
     },
     {
-        id: 'number',
+        id: 'start_no',
         numeric: true,
         disablePadding: false,
         label: 'Nummer',
@@ -97,6 +81,7 @@ function EnhancedTableHead(props) {
     return (
         <TableHead>
             <TableRow>
+                <TableCell />
                 <TableCell padding="checkbox">
                     <Checkbox
                         color="primary"
@@ -129,7 +114,6 @@ function EnhancedTableHead(props) {
                         </TableSortLabel>
                     </TableCell>
                 ))}
-                <TableCell />
             </TableRow>
         </TableHead>
     );
@@ -176,9 +160,12 @@ const EnhancedTableToolbar = (props) => {
                     id="tableTitle"
                     component="div"
                 >
-                    Nutrition
+                    {"Check outs: " + props.checkouts + " / " + props.runners.length}
                 </Typography>
             )}
+
+
+            <TextField sx={{ flex: '1 2 100%' }} id="outlined-basic" label="Søg" variant="outlined" onChange={(value) => { props.onSearch(value.target.value) }} />
 
             {numSelected > 0 ? (
                 <Tooltip title="Delete">
@@ -200,9 +187,33 @@ const EnhancedTableToolbar = (props) => {
 EnhancedTableToolbar.propTypes = {
     numSelected: PropTypes.number.isRequired,
 };
+
 function Row(props) {
     const { row, isSelected, labelId, onClick } = props;
     const [open, setOpen] = React.useState(false);
+    const [value, setValue] = React.useState(new Date('1995-12-17T' + row.timer));
+
+    const handleSubmit = (event, id) => {
+        event.preventDefault();
+        const data = new FormData(event.currentTarget);
+        let diploma = 0;
+        let checkout = 0;
+        if (data.get("diploma") !== null) {
+            diploma = 1;
+        }
+        if (data.get("checkout") !== null) {
+            checkout = 1;
+        }
+        fetch("https://runner.lyretech.dk/ords/rfidtest/api/checkout/" + id + "?TIME=" + data.get("time") + "&SEND2EMAIL=" + data.get("email") + "&EMAIL_CHK=" + diploma + "&CHECKOUT_CHK=" + checkout).then(response => {
+            if (response.status === 200) {
+                props.showSnackbar()
+            } else {
+                props.showErrorSnackbar(true);
+            }
+        }).catch(error => {
+            props.showErrorSnackbar(true);
+        })
+    }
 
     return (
         <React.Fragment>
@@ -217,7 +228,7 @@ function Row(props) {
                     </IconButton>
                 </TableCell>
 
-                <TableCell padding="checkbox">
+                <TableCell sx={{ borderBottom: 'unset' }} padding="checkbox">
                     <Checkbox
                         color="primary"
                         checked={isSelected}
@@ -228,42 +239,65 @@ function Row(props) {
                     />
                 </TableCell>
                 <TableCell sx={{ borderBottom: 'unset' }} component="th" scope="row" id={labelId}>
-                    {row.name}
+                    {row.time_checkout_utc !== null ? <div style={{ display: 'flex', alignItems: 'center' }}> <span>{row.name}</span> <CheckCircleIcon color="green" /> </div> : row.name}
                 </TableCell>
-                <TableCell sx={{ borderBottom: 'unset' }} align="right">{row.calories}</TableCell>
-                <TableCell sx={{ borderBottom: 'unset' }} align="right">{row.fat}</TableCell>
+                <TableCell sx={{ borderBottom: 'unset' }} align="right">{row.discipline}</TableCell>
+                <TableCell sx={{ borderBottom: 'unset' }} align="right">{row.start_no}</TableCell>
             </TableRow>
             <TableRow>
-                <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={5}>
+                <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
                     <Collapse in={open} timeout="auto" unmountOnExit>
                         <Box sx={{ margin: 1 }}>
                             <Typography variant="h6" gutterBottom component="div">
-                                History
+                                Detaljer
                             </Typography>
-                            <Table size="small" aria-label="purchases">
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell>Date</TableCell>
-                                        <TableCell>Customer</TableCell>
-                                        <TableCell align="right">Amount</TableCell>
-                                        <TableCell align="right">Total price ($)</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {row.history.map((historyRow) => (
-                                        <TableRow key={historyRow.date}>
-                                            <TableCell component="th" scope="row">
-                                                {historyRow.date}
-                                            </TableCell>
-                                            <TableCell>{historyRow.customerId}</TableCell>
-                                            <TableCell align="right">{historyRow.amount}</TableCell>
-                                            <TableCell align="right">
-                                                {Math.round(historyRow.amount * row.price * 100) / 100}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
+                            <Typography variant="h6" gutterBottom component="div">
+                                {row.id}
+                            </Typography>
+                            <LocalizationProvider dateAdapter={DateAdapter}>
+                                <Box component="form" onSubmit={(event) => handleSubmit(event, row.id)} noValidate sx={{
+                                    '& .MuiTextField-root': { m: 1, width: '25ch' },
+                                }}>
+                                    <TextField id="outlined-basic" name="email" label="Email" variant="outlined" defaultValue={row.send2email} />
+                                    <TextField id="outlined-basic" name="discipline" disabled label="Disciplin" variant="outlined" defaultValue={row.discipline} />
+                                    <TimePicker
+
+                                        ampm={false}
+                                        openTo="hours"
+                                        views={['hours', 'minutes', 'seconds']}
+                                        inputFormat="HH:mm:ss"
+                                        mask="__:__:__"
+                                        label="Tid"
+                                        value={value}
+                                        onChange={(newValue) => {
+                                            setValue(newValue);
+                                        }}
+                                        renderInput={(params) => <TextField name="time" {...params} />}
+                                    />
+                                    <TimePicker
+
+                                        ampm={false}
+                                        openTo="hours"
+                                        views={['hours', 'minutes', 'seconds']}
+                                        inputFormat="HH:mm:ss"
+                                        mask="__:__:__"
+                                        label="Go time"
+                                        value={row.go_time}
+                                        disabled
+                                        // onChange={(newValue) => {
+                                        //     setValue(newValue);
+                                        // }}
+                                        renderInput={(params) => <TextField name="time" {...params} />}
+                                    />
+
+                                    <FormGroup>
+                                        <FormControlLabel control={<Checkbox id="diploma" name="diploma" defaultChecked={row.email_chk === 1} />} label="Ønsker diplom" />
+                                        <FormControlLabel control={<Checkbox name="checkout" defaultChecked={row.time_checkout_utc !== null} />} label="Check out" />
+                                    </FormGroup>
+                                    <Button sx={{ marginLeft: 'auto' }} type="submit" variant="contained">Gem</Button>
+                                </Box>
+
+                            </LocalizationProvider>
                         </Box>
                     </Collapse>
                 </TableCell>
@@ -272,40 +306,13 @@ function Row(props) {
     );
 }
 
-Row.propTypes = {
-    row: PropTypes.shape({
-        calories: PropTypes.number.isRequired,
-        carbs: PropTypes.number.isRequired,
-        fat: PropTypes.number.isRequired,
-        history: PropTypes.arrayOf(
-            PropTypes.shape({
-                amount: PropTypes.number.isRequired,
-                customerId: PropTypes.string.isRequired,
-                date: PropTypes.string.isRequired,
-            }),
-        ).isRequired,
-        name: PropTypes.string.isRequired,
-        price: PropTypes.number.isRequired,
-        protein: PropTypes.number.isRequired,
-    }).isRequired,
-};
-
-const rows = [
-    createData('Frozen yoghurt', 159, 6.0, 24, 4.0, 3.99),
-    createData('Ice cream sandwich', 237, 9.0, 37, 4.3, 4.99),
-    createData('Eclair', 262, 16.0, 24, 6.0, 3.79),
-    createData('Cupcake', 305, 3.7, 67, 4.3, 2.5),
-    createData('Gingerbread', 356, 16.0, 49, 3.9, 1.5),
-    createData('Cupcake', 305, 3.7, 67, 4.3, 2.5),
-    createData('Gingerbread', 356, 16.0, 49, 3.9, 1.5),
-];
-
-export default function CustomCollapsibleTable() {
+export default function CustomCollapsibleTable(props) {
     const [order, setOrder] = React.useState('asc');
-    const [orderBy, setOrderBy] = React.useState('calories');
+    const [orderBy, setOrderBy] = React.useState('start_no');
     const [selected, setSelected] = React.useState([]);
     const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(5);
+    const [rowsPerPage, setRowsPerPage] = React.useState(10);
+    const [search, setSearch] = React.useState("")
 
     const handleRequestSort = (event, property) => {
         const isAsc = orderBy === property && order === 'asc';
@@ -315,7 +322,7 @@ export default function CustomCollapsibleTable() {
 
     const handleSelectAllClick = (event) => {
         if (event.target.checked) {
-            const newSelecteds = rows.map((n) => n.name);
+            const newSelecteds = props.runners.map((n) => n.name);
             setSelected(newSelecteds);
             return;
         }
@@ -353,14 +360,24 @@ export default function CustomCollapsibleTable() {
 
     const isSelected = (name) => selected.indexOf(name) !== -1;
 
+    const containsSearch = (list) => {
+        let temp = [];
+        list.forEach(element => {
+            if (element["name"].toLowerCase().includes(search.toLowerCase())) {
+                temp.push(element)
+            }
+        });
+        return temp;
+    }
+
     // Avoid a layout jump when reaching the last page with empty rows.
     const emptyRows =
-        page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
+        page > 0 ? Math.max(0, (1 + page) * rowsPerPage - props.runners.length) : 0;
 
     return (
         <Box sx={{ width: '100%' }}>
             <Paper sx={{ width: '100%', mb: 2 }}>
-                <EnhancedTableToolbar numSelected={selected.length} />
+                <EnhancedTableToolbar numSelected={selected.length} onSearch={setSearch} checkouts={props.checkouts} runners={props.runners} />
                 <TableContainer component={Paper}>
                     <Table
                         aria-label="collapsible table"
@@ -374,15 +391,15 @@ export default function CustomCollapsibleTable() {
                             orderBy={orderBy}
                             onSelectAllClick={handleSelectAllClick}
                             onRequestSort={handleRequestSort}
-                            rowCount={rows.length}
+                            rowCount={props.runners.length}
                         />
                         <TableBody>
-                            {rows.slice().sort(getComparator(order, orderBy))
+                            {containsSearch(props.runners).slice().sort(getComparator(order, orderBy))
                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                 .map((row, index) => {
                                     const isItemSelected = isSelected(row.name);
                                     const labelId = `enhanced-table-checkbox-${index}`;
-                                    return <Row key={row.name} row={row} isSelected={isItemSelected} labelId={labelId} onClick={(event) => handleClick(event, row.name)} />
+                                    return <Row key={row.id} row={row} showSnackbar={props.showSnackbar} showErrorSnackbar={props.showErrorSnackbar} isSelected={isItemSelected} labelId={labelId} onClick={(event) => handleClick(event, row.name)} />
 
                                 })}
                         </TableBody>
@@ -393,7 +410,7 @@ export default function CustomCollapsibleTable() {
                                     height: (53) * emptyRows,
                                 }}
                             >
-                                <TableCell colSpan={6} />
+                                <TableCell colSpan={7} />
                             </TableRow>
                         )}
                     </Table>
@@ -402,7 +419,7 @@ export default function CustomCollapsibleTable() {
                 <TablePagination
                     rowsPerPageOptions={[5, 10, 25]}
                     component="div"
-                    count={rows.length}
+                    count={props.runners.length}
                     rowsPerPage={rowsPerPage}
                     page={page}
                     onPageChange={handleChangePage}

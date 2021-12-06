@@ -8,6 +8,8 @@ import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import InboxIcon from '@mui/icons-material/MoveToInbox';
+import HomeIcon from '@mui/icons-material/Home';
+import { CardMembership } from '@mui/icons-material';
 import MailIcon from '@mui/icons-material/Mail';
 import { useHistory } from 'react-router';
 
@@ -42,15 +44,21 @@ export default function CustomDrawer(props) {
             onKeyDown={toggleDrawer(anchor, false)}
         >
             <List>
-                    <ListItem button key={'oversigt'} onClick={() => navigate("/")}>
-                        <ListItemIcon>
-                            <InboxIcon />
-                        </ListItemIcon>
-                        <ListItemText primary={'oversigt'} />
-                    </ListItem>
+                <ListItem button key={'oversigt'} onClick={() => navigate("/")}>
+                    <ListItemIcon>
+                        <HomeIcon></HomeIcon>
+                    </ListItemIcon>
+                    <ListItemText primary={'Oversigt'} />
+                </ListItem>
             </List>
             <Divider />
             <List>
+                <ListItem button key={'diploma'} onClick={() => navigate("/diploma")}>
+                    <ListItemIcon>
+                        <CardMembership></CardMembership>
+                    </ListItemIcon>
+                    <ListItemText primary={'Diplomer'} />
+                </ListItem>
                 <ListItem button key={"numbers"} onClick={() => navigate("/numbers")}>
                     <ListItemIcon>
                         <MailIcon />
